@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -52,9 +51,9 @@ func calculate_statistics() {
 		statistics[city][Count]  = statistics[city][Count] + 1
     } 
 		
-	for city := range statistics {
-		fmt.Println("City: ", city, " Max: ", statistics[city][Max], " Min: ", statistics[city][Min], " Average: ", statistics[city][Sum] / statistics[city][Count], "Count: ", statistics[city][Count])
-	}	
+	// for city := range statistics {
+		// fmt.Println("City: ", city, " Max: ", statistics[city][Max], " Min: ", statistics[city][Min], " Average: ", statistics[city][Sum] / statistics[city][Count], "Count: ", statistics[city][Count])
+	// }	
 
     if err := scanner.Err(); err != nil {
         log.Fatal(err)
