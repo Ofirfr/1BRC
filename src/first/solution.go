@@ -23,7 +23,7 @@ func CalculateStatistics() map[string]structs.CityResult {
 	}
 	defer file.Close()
 
-	statistics := make(map[string]*CityStatistics)
+	statistics := make(map[string]*CityStatistics, 10000)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
