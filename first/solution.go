@@ -35,6 +35,12 @@ func CalculateStatistics() {
 			log.Fatal(err)
 		}
 
+		if _, ok := statistics[city]; !ok {
+			statistics[city] = make(map[uint8]float32)
+			statistics[city][Max] = -100
+			statistics[city][Min] = 100
+		}
+
 		// Calculate statistics
 		statistics[city][Max] = max(statistics[city][Max], float32(temp))
 		statistics[city][Min] = min(statistics[city][Min], float32(temp))

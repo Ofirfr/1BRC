@@ -49,13 +49,12 @@ func CalculateStatistics() {
 		close(result)
 	}()
 
-	for _ = range result {
-		log.Println("Hey")
+	for range result {
 	}
 }
 
 func producer(c chan string) {
-defer close(c)
+	defer close(c)
 	file, err := os.Open("./data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
