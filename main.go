@@ -4,22 +4,23 @@ import (
 	"log"
 	"time"
 
-	"./first"
-	"./second"
+	"1BRC/first"
+	"1BRC/second"
 )
+
 func main() {
 	log.Println("First solution: ", measureTime(first.CalculateStatistics))
 	log.Println("Second solution: ", measureTime(second.CalculateStatistics))
 }
 
-func measureTime(f func()) time.Duration{
+func measureTime(f func()) time.Duration {
 	startTime := time.Now()
 
-    f()
+	f()
 
-    endTime := time.Now()
+	endTime := time.Now()
 
-    duration := endTime.Sub(startTime)
+	duration := endTime.Sub(startTime)
 
-    return duration
+	return duration
 }
