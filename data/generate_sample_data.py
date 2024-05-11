@@ -20,7 +20,8 @@ def generate_measurement():
 
 # Generate temperature measurements for each station
 with open("./data/temperature_data.txt", "w", encoding="utf-8") as file:
-  for _ in range (999):
+  row_count = 1000000 # Million!
+  for _ in range (row_count):
        station = random.choice(stations)
        measurement = generate_measurement()
-       file.write(f"{station} {measurement}\n")
+       file.write(f"{station};{measurement}\n")
