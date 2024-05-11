@@ -17,13 +17,13 @@ type CityStatistics struct {
 }
 
 func CalculateStatistics() map[string]structs.CityResult {
-	file, err := os.Open("./data/temperature_data.txt")
+	file, err := os.Open("../data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	statistics := make(map[string]CityStatistics)
+	statistics := make(map[string]*CityStatistics)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -40,7 +40,7 @@ func CalculateStatistics() map[string]structs.CityResult {
 
 		cityStats, ok := statistics[city]
 		if !ok {
-			statistics[city] = CityStatistics{
+			statistics[city] = &CityStatistics{
 				Max:   -100,
 				Min:   100,
 				Sum:   0,
@@ -49,12 +49,11 @@ func CalculateStatistics() map[string]structs.CityResult {
 			cityStats = statistics[city]
 		}
 
-		statistics[city] = CityStatistics{
-			Max:   max(cityStats.Max, temp),
-			Min:   min(cityStats.Min, temp),
-			Sum:   cityStats.Sum + temp,
-			Count: cityStats.Count + 1,
-		}
+		cityStats.Max = max(cityStats.Max, temp)
+		cityStats.Min = min(cityStats.Min, temp)
+		cityStats.Sum = cityStats.Sum + temp
+		cityStats.Count = cityStats.Count + 1
+
 	}
 
 	if err := scanner.Err(); err != nil {
