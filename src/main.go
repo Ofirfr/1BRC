@@ -26,7 +26,7 @@ func main() {
 	// log.Println("Second solution: ", measureTime(second.CalculateStatistics))
 }
 
-func measureTime(f func() map[string]structs.CityResult) time.Duration {
+func measureTime(f func() map[string]*structs.CityResult) time.Duration {
 	startTime := time.Now()
 
 	f()
