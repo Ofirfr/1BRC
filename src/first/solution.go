@@ -1,6 +1,7 @@
 package first
 
 import (
+	"1BRC/src/structs"
 	"bufio"
 	"log"
 	"os"
@@ -12,10 +13,10 @@ type CityStatistics struct {
 	Max   float64
 	Min   float64
 	Sum   float64
-	Count int64
+	Count float64
 }
 
-func CalculateStatistics() {
+func CalculateStatistics() map[string]structs.CityResult {
 	file, err := os.Open("./data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -32,7 +33,7 @@ func CalculateStatistics() {
 		city_and_temp := strings.Split(line, ";")
 		city := city_and_temp[0]
 		temp_string := city_and_temp[1]
-		temp, err := strconv.ParseFloat(temp_string, 32)
+		temp, err := strconv.ParseFloat(temp_string, 64)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,12 +46,13 @@ func CalculateStatistics() {
 				Sum:   0,
 				Count: 0,
 			}
+			cityStats = statistics[city]
 		}
 
-		cityStats = CityStatistics{
-			Max:   max(cityStats.Max, float64(temp)),
-			Min:   min(cityStats.Min, float64(temp)),
-			Sum:   cityStats.Sum + float64(temp),
+		statistics[city] = CityStatistics{
+			Max:   max(cityStats.Max, temp),
+			Min:   min(cityStats.Min, temp),
+			Sum:   cityStats.Sum + temp,
 			Count: cityStats.Count + 1,
 		}
 	}
@@ -58,4 +60,13 @@ func CalculateStatistics() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	results := make(map[string]structs.CityResult)
+	for city, cityStats := range statistics {
+		results[city] = structs.CityResult{
+			Max:     cityStats.Max,
+			Min:     cityStats.Min,
+			Average: cityStats.Sum / cityStats.Count,
+		}
+	}
+	return results
 }
