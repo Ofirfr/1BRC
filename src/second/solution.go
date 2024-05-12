@@ -1,6 +1,7 @@
 package second
 
 import (
+	"1BRC/src/structs"
 	"bufio"
 	"log"
 	"os"
@@ -15,14 +16,15 @@ const Sum = 3
 const Count = 4
 const NumOfParsers = 1
 const NumOfAggregators = 1
+const ChannelBuffer = 100000
 
-func CalculateStatistics() {
+func CalculateStatistics() map[string]*structs.CityResult {
 	var wgParser sync.WaitGroup
 	var wgAggregator sync.WaitGroup
 
-	lines := make(chan string)
-	dataPoints := make(chan DataPoint)
-	result := make(chan map[string]map[uint8]float32)
+	lines := make(chan string, ChannelBuffer)
+	dataPoints := make(chan DataPoint, ChannelBuffer)
+	result := make(chan map[string]*structs.CityResult, ChannelBuffer)
 	go producer(lines)
 	for i := 0; i < NumOfParsers; i++ {
 		wgParser.Add(1)
@@ -49,13 +51,12 @@ func CalculateStatistics() {
 		close(result)
 	}()
 
-	for range result {
-	}
+	return <-result
 }
 
 func producer(c chan string) {
 	defer close(c)
-	file, err := os.Open("./data/temperature_data.txt")
+	file, err := os.Open("../data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func producer(c chan string) {
 
 type DataPoint struct {
 	city string
-	temp float32
+	temp float64
 }
 
 func parser(c chan string, d chan DataPoint) {
@@ -87,24 +88,31 @@ func parser(c chan string, d chan DataPoint) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		d <- DataPoint{city, float32(temp)}
+		d <- DataPoint{city, temp}
 	}
 }
 
-func aggregator(d chan DataPoint, r chan map[string]map[uint8]float32) {
-	statistics := make(map[string]map[uint8]float32)
+func aggregator(d chan DataPoint, r chan map[string]*structs.CityResult) {
+	statistics := make(map[string]*structs.CityResult, 10000)
 
 	for dataPoint := range d {
 		city, temp := dataPoint.city, dataPoint.temp
-		if _, ok := statistics[city]; !ok {
-			statistics[city] = make(map[uint8]float32)
-			statistics[city][Max] = -100
-			statistics[city][Min] = 100
+		cityResult, ok := statistics[city]
+		if !ok {
+			emptyCityResult := &structs.CityResult{
+				Max:     -100,
+				Min:     100,
+				Sum:     0,
+				Count:   0,
+				Average: 0,
+			}
+			statistics[city] = emptyCityResult
+			cityResult = emptyCityResult
 		}
-		statistics[city][Max] = max(statistics[city][Max], float32(temp))
-		statistics[city][Min] = min(statistics[city][Min], float32(temp))
-		statistics[city][Sum] = statistics[city][Sum] + float32(temp)
-		statistics[city][Count] = statistics[city][Count] + 1
+		cityResult.Max = max(cityResult.Max, temp)
+		cityResult.Min = min(cityResult.Min, temp)
+		cityResult.Sum = cityResult.Sum + temp
+		cityResult.Count = cityResult.Sum + 1
 	}
 
 	r <- statistics
