@@ -16,15 +16,17 @@ const Sum = 3
 const Count = 4
 const NumOfParsers = 1
 const NumOfAggregators = 1
-const ChannelBuffer = 100000
+const LinesChannelBuffer = 100000
+const DataChannelBuffer = 100000
+const ResultChannelBuffer = 100000
 
 func CalculateStatistics() map[string]*structs.CityResult {
 	var wgParser sync.WaitGroup
 	var wgAggregator sync.WaitGroup
 
-	lines := make(chan string, ChannelBuffer)
-	dataPoints := make(chan DataPoint, ChannelBuffer)
-	result := make(chan map[string]*structs.CityResult, ChannelBuffer)
+	lines := make(chan string, LinesChannelBuffer)
+	dataPoints := make(chan DataPoint, DataChannelBuffer)
+	result := make(chan map[string]*structs.CityResult, ResultChannelBuffer)
 	go producer(lines)
 	for i := 0; i < NumOfParsers; i++ {
 		wgParser.Add(1)
