@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const CitiesCount = 100
+
 func CalculateStatistics() map[string]*structs.CityResult {
 	file, err := os.Open("../data/temperature_data.txt")
 	if err != nil {
@@ -16,7 +18,7 @@ func CalculateStatistics() map[string]*structs.CityResult {
 	}
 	defer file.Close()
 
-	statistics := make(map[string]*structs.CityResult, 10000)
+	statistics := make(map[string]*structs.CityResult, CitiesCount)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

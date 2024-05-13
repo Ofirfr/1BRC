@@ -12,7 +12,7 @@ with open("./data/worldcities.csv", newline='', encoding="utf-8") as csvfile:
 random.shuffle(city_names)
 
 # Generate 999 different stations with real city names
-stations = city_names[:10000]
+stations = city_names[:100]
 
 # Function to generate a random temperature measurement with one fractional digit
 
