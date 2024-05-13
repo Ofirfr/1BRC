@@ -1,7 +1,7 @@
 package main
 
 import (
-	"1BRC/src/first"
+	"1BRC/src/playground"
 	"1BRC/src/structs"
 	"flag"
 	"log"
@@ -22,18 +22,21 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
-	log.Println("First solution: ", measureTime(first.CalculateStatistics))
+	log.Println("First solution: ", measureTime(playground.CalculateStatistics))
 	// log.Println("Second solution: ", measureTime(second.CalculateStatistics))
 }
 
 func measureTime(f func() map[string]*structs.CityResult) time.Duration {
 	startTime := time.Now()
 
-	f()
+	result := f()
 
 	endTime := time.Now()
 
 	duration := endTime.Sub(startTime)
-
+	for _, v := range result {
+		dataPoint := *v
+		log.Println("Max is ", dataPoint.Max, " Min is ", dataPoint.Min, " Sum is ", dataPoint.Sum, " Count is ", dataPoint.Count, " Average is ", dataPoint.Average)
+	}
 	return duration
 }

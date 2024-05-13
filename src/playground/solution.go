@@ -5,127 +5,89 @@ import (
 	"bufio"
 	"log"
 	"os"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
 )
 
-const Max = 1
-const Min = 2
-const Sum = 3
-const Count = 4
-const NumOfParsers = 1
-const NumOfAggregators = 1
-const ChannelBuffer = 100000
-
 func CalculateStatistics() map[string]*structs.CityResult {
-	var wgParser sync.WaitGroup
-	var wgAggregator sync.WaitGroup
-
-	lines := make(chan string, ChannelBuffer)
-	dataPoints := make(chan DataPoint, ChannelBuffer)
-	result := make(chan map[string]*structs.CityResult, ChannelBuffer)
-	go producer(lines)
-	for i := 0; i < NumOfParsers; i++ {
-		wgParser.Add(1)
-		go func() {
-			defer wgParser.Done()
-			log.Println("Starting parser")
-			parser(lines, dataPoints)
-		}()
-	}
-	for i := 0; i < NumOfAggregators; i++ {
-		wgAggregator.Add(1)
-		go func() {
-			defer wgAggregator.Done()
-			log.Println("Starting aggregator")
-			aggregator(dataPoints, result)
-		}()
-	}
-	go func() {
-		wgParser.Wait()
-		close(dataPoints)
-	}()
-	go func() {
-		wgAggregator.Wait()
-		close(result)
-	}()
-
-	return <-result
-}
-
-func producer(c chan string) {
-	defer close(c)
 	file, err := os.Open("../data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		c <- line
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-type DataPoint struct {
-	city string
-	temp float64
-}
-
-func parser(c chan string, d chan DataPoint) {
-	for line := range c {
-		// Parse the line into city and temperature
-		city_and_temp := strings.Split(line, ";")
-		city := city_and_temp[0]
-		temp_string := city_and_temp[1]
-		temp, err := strconv.ParseFloat(temp_string, 32)
-		if err != nil {
-			log.Fatal(err)
-		}
-		d <- DataPoint{city, temp}
-	}
-}
-
-func aggregator(d chan DataPoint, r chan map[string]*structs.CityResult) {
 	statistics := make(map[string]*structs.CityResult, 10000)
-
-	for dataPoint := range d {
-		city, temp := dataPoint.city, dataPoint.temp
-		cityResult, ok := statistics[city]
-		if !ok {
-			emptyCityResult := &structs.CityResult{
-				Max:     -100,
-				Min:     100,
-				Sum:     0,
-				Count:   0,
-				Average: 0,
-			}
-			statistics[city] = emptyCityResult
-			cityResult = emptyCityResult
-		}
-		cityResult.Max = max(cityResult.Max, temp)
-		cityResult.Min = min(cityResult.Min, temp)
-		cityResult.Sum = cityResult.Sum + temp
-		cityResult.Count = cityResult.Sum + 1
+	// var wg sync.WaitGroup
+	// wg.Add(2)
+	// go func() {
+	// 	defer wg.Done()
+	// 	scanner := bufio.NewScanner(file)
+	// 	counter := 0
+	// 	for scanner.Scan() {
+	// 		if counter > 500000 {
+	// 			continue
+	// 		}
+	// 		scanner.Text()
+	// 		counter++
+	// 	}
+	// }()
+	// go func() {
+	// 	defer wg.Done()
+	// 	scanner := bufio.NewScanner(file)
+	// 	counter := 0
+	// 	for scanner.Scan() {
+	// 		if counter < 500000 {
+	// 			continue
+	// 		}
+	// 		scanner.Text()
+	// 		counter++
+	// 	}
+	// }()
+	// wg.Wait()
+	scanner := bufio.NewScanner(file)
+	counter := 0
+	for scanner.Scan() {
+		// if counter < 500000 {
+		// 	continue
+		// }
+		scanner.Text()
+		counter++
 	}
+	// scanner := bufio.NewScanner(file)
+	// for scanner.Scan() {
+	// 	line := scanner.Text()
 
-	r <- statistics
-}
-func measureTime(f func() map[string]*structs.CityResult) time.Duration {
-	startTime := time.Now()
+	// 	// Parse the line into city and temperature
+	// 	city_and_temp := strings.Split(line, ";")
+	// 	city := city_and_temp[0]
+	// 	temp_string := city_and_temp[1]
+	// 	temp, err := strconv.ParseFloat(temp_string, 64)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
 
-	f()
+	// 	cityStats, ok := statistics[city]
+	// 	if !ok {
+	// 		statistics[city] = &structs.CityResult{
+	// 			Max:     -100,
+	// 			Min:     100,
+	// 			Sum:     0,
+	// 			Count:   0,
+	// 			Average: 0,
+	// 		}
+	// 		cityStats = statistics[city]
+	// 	}
 
-	endTime := time.Now()
+	// 	cityStats.Max = max(cityStats.Max, temp)
+	// 	cityStats.Min = min(cityStats.Min, temp)
+	// 	cityStats.Sum = cityStats.Sum + temp
+	// 	cityStats.Count = cityStats.Count + 1
 
-	duration := endTime.Sub(startTime)
+	// }
 
-	return duration
+	// if err := scanner.Err(); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// for _, cityStats := range statistics {
+	// 	cityStats.Average = cityStats.Sum / cityStats.Count
+	// }
+	return statistics
 }
