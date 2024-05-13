@@ -10,24 +10,38 @@ import (
 	"sync"
 )
 
+const NumOfRows = 1000000
+
 const Max = 1
 const Min = 2
 const Sum = 3
 const Count = 4
+const NumOfProducers = 1
 const NumOfParsers = 1
 const NumOfAggregators = 1
-const LinesChannelBuffer = 100000
-const DataChannelBuffer = 100000
-const ResultChannelBuffer = 100000
+const LinesChannelBuffer = 1000000
+const DataChannelBuffer = 1000000
+const ResultChannelBuffer = 1000000
 
 func CalculateStatistics() map[string]*structs.CityResult {
 	var wgParser sync.WaitGroup
 	var wgAggregator sync.WaitGroup
+	var wgProducer sync.WaitGroup
 
 	lines := make(chan string, LinesChannelBuffer)
 	dataPoints := make(chan DataPoint, DataChannelBuffer)
 	result := make(chan map[string]*structs.CityResult, ResultChannelBuffer)
-	go producer(lines)
+
+	for i := 0; i < NumOfProducers; i++ {
+		wgProducer.Add(1)
+		start := NumOfRows / NumOfProducers * i
+		end := NumOfRows / NumOfProducers * (i + 1)
+		go func() {
+			defer wgProducer.Done()
+			log.Println("Starting producer")
+			producer(lines, start, end)
+		}()
+	}
 	for i := 0; i < NumOfParsers; i++ {
 		wgParser.Add(1)
 		go func() {
@@ -45,6 +59,10 @@ func CalculateStatistics() map[string]*structs.CityResult {
 		}()
 	}
 	go func() {
+		wgProducer.Wait()
+		close(lines)
+	}()
+	go func() {
 		wgParser.Wait()
 		close(dataPoints)
 	}()
@@ -56,8 +74,7 @@ func CalculateStatistics() map[string]*structs.CityResult {
 	return <-result
 }
 
-func producer(c chan string) {
-	defer close(c)
+func producer(c chan string, start int, end int) {
 	file, err := os.Open("../data/temperature_data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -65,9 +82,13 @@ func producer(c chan string) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
+	count := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		c <- line
+		if count >= start && count < end {
+			c <- line
+		}
+		count += 1
 	}
 
 	if err := scanner.Err(); err != nil {
